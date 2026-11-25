@@ -877,7 +877,7 @@
       showSyncStatus(`Downloaded ${fileName} — save to Google Drive.`);
     }
 
-    function importDataFromDrive(event) {
+function importDataFromDrive(event) {
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
@@ -890,10 +890,21 @@
           }
           appState = { ...DEFAULT_STATE, ...imported };
           saveState();
+
+          // Jump to the latest date present in the imported logs (or today)
+          const logDates = Object.keys(appState.logs).sort();
+          if (logDates.length > 0 && !appState.logs[currentDate]) {
+            currentDate = logDates[logDates.length - 1];
+          }
+
           renderAll();
-          showSyncStatus('Backup restored from Google Drive!');
+          switchTab('today');
+          alert(`Restored ${logDates.length} day(s) and ${appState.foodLibrary.length} saved foods from Google Drive!`);
         } catch (err) {
-          alert('Could not parse backup file.');
+          alert('Could not parse backup file: ' + err.message);
+        } finally {
+          // Reset input so selecting the same filename again still triggers onchange on Android
+          event.target.value = '';
         }
       };
       reader.readAsText(file);
