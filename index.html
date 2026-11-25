@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>DailyFit Log — Daily Plan, Workouts & Calories</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    /* Custom subtle scrollbars for desktop */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(148, 163, 184, 0.25);
+      border-radius: 9999px;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex justify-center selection:bg-emerald-500/30">
+
+  <!-- App Shell: Full-width on mobile, centered mobile-app frame on wide PC screens -->
+  <div id="app" class="w-full max-w-xl bg-slate-900 min-h-screen flex flex-col border-x border-slate-800/80 shadow-2xl relative pb-24">
+
+    <!-- Top App Header & Date Bar -->
+    <header class="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 pt-3 pb-3">
+      <div class="flex items-center justify-between gap-2 mb-2.5">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-base font-bold tracking-tight text-white leading-none">DailyFit Log</h1>
+            <p class="text-[11px] text-slate-400 mt-0.5">Plan • Train • Fuel</p>
+          </div>
+        </div>
+
+        <!-- Quick Sync Status Pill -->
+        <button onclick="switchTab('sync')" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-800/90 hover:bg-slate-800 border border-slate-700/70 text-xs text-slate-300 transition">
+          <svg class="w-3.5 h-3.5 text-sky-400" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm1.72 0l6.56 11.5h6.86L16.29 3.5H9.43zm6.29 12.5H2.58l3.43 5h13.14l3.43-5h-6.86z"/>
+          </svg>
+          <span id="headerSyncBadge">Drive Sync</span>
+        </button>
+      </div>
+
+      <!-- Date Navigator -->
+      <div class="flex items-center justify-between bg-slate-800/80 rounded-xl p-1 border border-slate-700/60">
+        <button onclick="changeDate(-1)" aria-label="Previous day" class="w-10 h-9 rounded-lg flex items-center justify-center text-slate-300 hover:bg-slate-700/70 active:scale-95 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button onclick="goToToday()" id="dateDisplayBtn" class="text-sm font-semibold text-white px-2 py-1 rounded-lg hover:bg-slate-700/50 transition">
+            Today
+          </button>
+          <label class="relative flex items-center justify-center w-8 h-8 rounded-lg text-slate-400 hover:text-white hover:bg-slate-700/50 cursor-pointer transition" title="Pick specific date">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <input type="date" id="datePickerInput" onchange="setSpecificDate(this.value)" class="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+          </label>
+        </div>
+
+        <button onclick="changeDate(1)" aria-label="Next day" class="w-10 h-9 rounded-lg flex items-center justify-center text-slate-300 hover:bg-slate-700/70 active:scale-95 transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Scrollable Content Area -->
+    <main class="flex-1 px-4 pt-4 space-y-5">
+
+      <!-- ==================== TAB 1: TODAY (PLAN & LOG) ==================== -->
+      <section id="tab-today" class="space-y-5">
+
+        <!-- Scoreboard Card -->
+        <div class="bg-slate-800/75 border border-slate-700/70 rounded-2xl p-4 shadow-lg">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Daily Energy Balance</span>
+            <label class="inline-flex items-center gap-2 cursor-pointer select-none">
+              <span class="text-[11px] text-slate-400">Add Exercise Cals</span>
+              <input type="checkbox" id="includeExerciseToggle" onchange="toggleIncludeExercise()" class="sr-only peer" />
+              <div class="w-9 h-5 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all relative peer-checked:bg-emerald-500"></div>
+            </label>
+          </div>
+
+          <!-- Calorie Equation Row -->
+          <div class="grid grid-cols-4 gap-1.5 text-center bg-slate-900/80 rounded-xl p-2.5 border border-slate-800">
+            <div>
+              <div id="statTarget" class="text-base sm:text-lg font-bold text-white">2,200</div>
+              <div class="text-[10px] uppercase tracking-wide text-slate-400">Target</div>
+            </div>
+            <div>
+              <div id="statFood" class="text-base sm:text-lg font-bold text-amber-400">0</div>
+              <div class="text-[10px] uppercase tracking-wide text-slate-400">Food</div>
+            </div>
+            <div>
+              <div id="statBurned" class="text-base sm:text-lg font-bold text-sky-400">0</div>
+              <div class="text-[10px] uppercase tracking-wide text-slate-400">Burned</div>
+            </div>
+            <div class="border-l border-slate-800 pl-1">
+              <div id="statRemaining" class="text-base sm:text-lg font-extrabold text-emerald-400">2,200</div>
+              <div class="text-[10px] uppercase tracking-wide text-slate-400">Left</div>
+            </div>
+          </div>
+
+          <!-- Macro Progress Bars -->
+          <div class="mt-4 space-y-2.5">
+            <!-- Protein (Highlighted) -->
+            <div>
+              <div class="flex justify-between text-xs mb-1">
+                <span class="font-semibold text-emerald-300 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400"></span> Protein
+                </span>
+                <span id="macroProteinText" class="font-medium text-slate-300">0 / 170g</span>
+              </div>
+              <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+                <div id="macroProteinBar" class="h-full bg-emerald-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+              </div>
+            </div>
+
+            <!-- Carbs & Fat Side-by-Side -->
+            <div class="grid grid-cols-2 gap-3 pt-0.5">
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="font-medium text-sky-300">Carbs</span>
+                  <span id="macroCarbsText" class="text-slate-400">0 / 100g</span>
+                </div>
+                <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
+                  <div id="macroCarbsBar" class="h-full bg-sky-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-xs mb-1">
+                  <span class="font-medium text-amber-300">Fat</span>
+                  <span id="macroFatText" class="text-slate-400">0 / 85g</span>
+                </div>
+                <div class="w-full h-2 bg-slate-900 rounded-full overflow-hidden">
+                  <div id="macroFatBar" class="h-full bg-amber-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Daily Workout Planner Card -->
+        <div class="bg-slate-800/75 border border-slate-700/70 rounded-2xl p-4 shadow-lg">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div>
+              <h2 class="text-base font-bold text-white flex items-center gap-2">
+                <span>Daily Workout Plan</span>
+                <span id="workoutProgressBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300">0/0</span>
+              </h2>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <!-- Routine Quick-Loader -->
+              <select id="quickRoutineSelect" onchange="loadRoutineIntoDay(this.value); this.value='';" class="h-10 px-2.5 rounded-xl bg-slate-900 border border-slate-700 text-xs font-medium text-slate-200 focus:outline-none focus:border-emerald-500">
+                <option value="">+ Load Routine...</option>
+              </select>
+
+              <button onclick="openWorkoutModal()" class="h-10 px-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-semibold text-xs flex items-center gap-1 transition shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span>Exercise</span>
+              </button>
+            </div>
+          </div>
+
+          <div id="workoutListContainer" class="space-y-2.5">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Daily Meals & Calorie Log -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between px-1">
+            <h2 class="text-base font-bold text-white">Meals & Nutrition</h2>
+            <button onclick="openFoodModal('Breakfast')" class="h-10 px-3.5 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-emerald-400 font-semibold text-xs flex items-center gap-1.5 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.4" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Quick Log Food</span>
+            </button>
+          </div>
+
+          <div id="mealsContainer" class="space-y-3">
+            <!-- Breakfast, Lunch, Dinner, Snacks rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Daily Notes -->
+        <div class="bg-slate-800/60 border border-slate-700/60 rounded-2xl p-4">
+          <label for="dailyNotesInput" class="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Daily Check-In & Energy Notes</label>
+          <textarea id="dailyNotesInput" rows="2" onchange="saveDailyNotes(this.value)" placeholder="How was energy, sleep, or workout intensity today?" class="w-full rounded-xl bg-slate-900/90 border border-slate-700/80 px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500"></textarea>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 2: LIBRARY & TEMPLATES ==================== -->
+      <section id="tab-library" class="hidden space-y-5">
+
+        <!-- Target Meal Selector for 1-Tap Logging -->
+        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-3.5 flex items-center justify-between gap-3">
+          <div>
+            <div class="text-xs font-semibold text-emerald-300">1-Tap Log Target Meal</div>
+            <div class="text-[11px] text-slate-400">Tap "+ Log" below to add straight to active date</div>
+          </div>
+          <select id="libraryTargetMeal" class="h-10 px-3 rounded-xl bg-slate-900 border border-emerald-500/40 text-sm font-semibold text-white focus:outline-none">
+            <option value="Breakfast">Breakfast</option>
+            <option value="Lunch">Lunch</option>
+            <option value="Dinner">Dinner</option>
+            <option value="Snacks">Snacks</option>
+          </select>
+        </div>
+
+        <!-- Saved Favorite Foods -->
+        <div class="bg-slate-800/75 border border-slate-700/70 rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h2 class="text-base font-bold text-white">Saved Foods & Meals</h2>
+              <p class="text-xs text-slate-400">Your go-to meals for fast logging</p>
+            </div>
+            <button onclick="toggleNewFoodLibraryForm()" class="h-10 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold text-xs transition">
+              + New Food
+            </button>
+          </div>
+
+          <!-- Add New Food to Library Collapsible Form -->
+          <form id="newLibraryFoodForm" onsubmit="addLibraryFood(event)" class="hidden mb-4 bg-slate-900/90 border border-slate-700 rounded-xl p-3.5 space-y-3">
+            <div class="text-xs font-bold uppercase tracking-wider text-emerald-400">Add Custom Food / Meal</div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <input type="text" id="libFoodName" required placeholder="Name (e.g., Crustless Quiche)" class="h-11 px-3 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+              <input type="text" id="libFoodServing" required placeholder="Serving (e.g., 1 slice / 6 oz)" class="h-11 px-3 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div class="grid grid-cols-4 gap-2">
+              <div>
+                <label class="block text-[10px] text-slate-400 mb-1">Calories</label>
+                <input type="number" id="libFoodCals" required min="0" placeholder="320" class="w-full h-11 px-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label class="block text-[10px] text-emerald-400 mb-1">Protein (g)</label>
+                <input type="number" id="libFoodP" required min="0" step="0.5" placeholder="28" class="w-full h-11 px-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label class="block text-[10px] text-sky-400 mb-1">Carbs (g)</label>
+                <input type="number" id="libFoodC" required min="0" step="0.5" placeholder="6" class="w-full h-11 px-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+              </div>
+              <div>
+                <label class="block text-[10px] text-amber-400 mb-1">Fat (g)</label>
+                <input type="number" id="libFoodF" required min="0" step="0.5" placeholder="19" class="w-full h-11 px-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+              </div>
+            </div>
+            <div class="flex justify-end gap-2">
+              <button type="button" onclick="toggleNewFoodLibraryForm()" class="h-10 px-3.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-medium">Cancel</button>
+              <button type="submit" class="h-10 px-4 rounded-xl bg-emerald-500 text-slate-950 text-xs font-bold">Save to Library</button>
+            </div>
+          </form>
+
+          <div id="libraryFoodsList" class="space-y-2">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <!-- Saved Workout Routines -->
+        <div class="bg-slate-800/75 border border-slate-700/70 rounded-2xl p-4">
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h2 class="text-base font-bold text-white">Workout Routines</h2>
+              <p class="text-xs text-slate-400">Insert an entire workout into any day</p>
+            </div>
+            <button onclick="saveCurrentDayAsRoutine()" class="h-10 px-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-white font-semibold text-xs transition">
+              + Save Today's Plan
+            </button>
+          </div>
+
+          <div id="libraryRoutinesList" class="space-y-2.5">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ==================== TAB 3: SYNC & SETTINGS ==================== -->
+      <section id="tab-sync" class="hidden space-y-5">
+
+        <!-- Google Drive Export / Import Card -->
+        <div class="bg-slate-800/80 border border-sky-500/30 rounded-2xl p-4 shadow-lg space-y-4">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center shrink-0 text-sky-400">
+              <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M7.71 3.5L1.15 15l3.43 6 6.55-11.5L7.71 3.5zm1.72 0l6.56 11.5h6.86L16.29 3.5H9.43zm6.29 12.5H2.58l3.43 5h13.14l3.43-5h-6.86z"/>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-white">Google Drive Sync & Backup</h2>
+              <p class="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                Keep your PC and Android phone in sync without subscriptions. Export a backup file to your Google Drive folder, then import it on your other device.
+              </p>
+            </div>
+          </div>
+
+          <div class="bg-slate-900/80 rounded-xl p-3 border border-slate-700/70 flex items-center justify-between text-xs">
+            <span class="text-slate-400">Last Backup / Sync:</span>
+            <span id="lastSyncTimestamp" class="font-semibold text-slate-200">Never</span>
+          </div>
+
+          <!-- Export Buttons -->
+          <div class="space-y-2">
+            <button onclick="exportBackupToDrive(true)" id="shareDriveBtn" class="w-full h-12 rounded-xl bg-sky-500 hover:bg-sky-400 active:scale-[0.99] text-slate-950 font-bold text-sm flex items-center justify-center gap-2 transition shadow-md">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              <span>Export / Save to Google Drive</span>
+            </button>
+
+            <button onclick="exportBackupToDrive(false)" class="w-full h-11 rounded-xl bg-slate-700/80 hover:bg-slate-700 text-slate-200 font-semibold text-xs flex items-center justify-center gap-2 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+              <span>Download JSON File (PC Google Drive Folder)</span>
+            </button>
+          </div>
+
+          <!-- Import Section -->
+          <div class="pt-2 border-t border-slate-700/70 space-y-2.5">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-300">Import from Google Drive</span>
+              <select id="importModeSelect" class="h-8 px-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-slate-300">
+                <option value="merge">Merge (Keep newest)</option>
+                <option value="replace">Replace all data</option>
+              </select>
+            </div>
+
+            <label class="w-full h-12 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-bold text-sm flex items-center justify-center gap-2 cursor-pointer transition">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>Select Backup File from Drive</span>
+              <input type="file" id="importFileInput" accept=".json,application/json" onchange="handleImportFile(event)" class="hidden" />
+            </label>
+          </div>
+
+          <!-- Quick Workflow Tip -->
+          <div class="bg-slate-900/70 rounded-xl p-3 text-[11px] text-slate-400 space-y-1">
+            <p class="font-semibold text-slate-300">How PC ↔ Android Sync Works:</p>
+            <p>• <strong class="text-slate-200">On PC:</strong> Click <em>Download JSON File</em> and save into your synced Google Drive folder.</p>
+            <p>• <strong class="text-slate-200">On Android:</strong> Tap <em>Select Backup File from Drive</em>, pick the file from Drive, and your plan appears immediately. Reverse the steps after logging workouts or meals on your phone.</p>
+          </div>
+        </div>
+
+        <!-- Daily Nutrition Targets -->
+        <div class="bg-slate-800/75 border border-slate-700/70 rounded-2xl p-4 space-y-3">
+          <h2 class="text-base font-bold text-white">Daily Calorie & Macro Targets</h2>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Calories (kcal)</label>
+              <input type="number" id="goalCaloriesInput" min="800" max="8000" step="50" class="w-full h-11 px-3 rounded-xl bg-slate-900 border border-slate-700 text-sm font-semibold text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs text-emerald-400 mb-1">Protein (g)</label>
+              <input type="number" id="goalProteinInput" min="20" max="500" step="5" class="w-full h-11 px-3 rounded-xl bg-slate-900 border border-slate-700 text-sm font-semibold text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs text-sky-400 mb-1">Carbs (g)</label>
+              <input type="number" id="goalCarbsInput" min="0" max="800" step="5" class="w-full h-11 px-3 rounded-xl bg-slate-900 border border-slate-700 text-sm font-semibold text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs text-amber-400 mb-1">Fat (g)</label>
+              <input type="number" id="goalFatInput" min="10" max="300" step="5" class="w-full h-11 px-3 rounded-xl bg-slate-900 border border-slate-700 text-sm font-semibold text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+          </div>
+          <button onclick="saveGoals()" class="w-full h-11 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition">
+            Save Nutrition Targets
+          </button>
+        </div>
+
+        <!-- Data Management -->
+        <div class="bg-slate-800/50 border border-slate-800 rounded-2xl p-4 space-y-2.5">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Data Controls</h3>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button onclick="loadDemoDay()" class="h-11 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-slate-200 transition">
+              Populate Sample Day
+            </button>
+            <button onclick="confirmClearAllData()" class="h-11 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-xs font-semibold text-rose-300 transition">
+              Reset All Data
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Bottom Tab Navigation Bar -->
+    <nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-xl bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-3 py-2 z-30">
+      <div class="grid grid-cols-3 gap-1">
+        <button onclick="switchTab('today')" id="nav-today" class="nav-btn h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 text-emerald-400 bg-emerald-500/10 font-semibold transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+          </svg>
+          <span class="text-[11px]">Today</span>
+        </button>
+
+        <button onclick="switchTab('library')" id="nav-library" class="nav-btn h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-200 font-medium transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+          <span class="text-[11px]">Library</span>
+        </button>
+
+        <button onclick="switchTab('sync')" id="nav-sync" class="nav-btn h-12 rounded-xl flex flex-col items-center justify-center gap-0.5 text-slate-400 hover:text-slate-200 font-medium transition">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+          </svg>
+          <span class="text-[11px]">Sync & Goals</span>
+        </button>
+      </div>
+    </nav>
+
+    <!-- ==================== MODAL: ADD / EDIT WORKOUT ==================== -->
+    <div id="workoutModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 id="workoutModalTitle" class="text-base font-bold text-white">Plan Exercise</h3>
+          <button onclick="closeWorkoutModal()" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">✕</button>
+        </div>
+
+        <form onsubmit="saveWorkoutEntry(event)" class="space-y-3">
+          <input type="hidden" id="editWorkoutId" />
+
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Exercise Name</label>
+            <input type="text" id="woName" required placeholder="e.g., Dumbbell Bench Press or Zone 2 Walk" class="w-full h-11 px-3 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Category</label>
+              <select id="woCategory" class="w-full h-11 px-3 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500">
+                <option value="Strength">Strength</option>
+                <option value="Cardio">Cardio</option>
+                <option value="Mobility">Mobility / Core</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Est. Burned (kcal)</label>
+              <input type="number" id="woCalories" min="0" max="3000" value="120" class="w-full h-11 px-3 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs text-slate-400 mb-1">Target Sets / Reps / Duration / Weight</label>
+            <input type="text" id="woDetails" placeholder="e.g., 3 sets × 10 reps @ 45 lbs  or  40 mins" class="w-full h-11 px-3 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+          </div>
+
+          <div class="flex gap-2.5 pt-2">
+            <button type="button" onclick="closeWorkoutModal()" class="flex-1 h-11 rounded-xl bg-slate-800 text-slate-300 font-semibold text-sm">Cancel</button>
+            <button type="submit" class="flex-1 h-11 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm">Save Exercise</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ==================== MODAL: LOG FOOD ==================== -->
+    <div id="foodModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div class="w-full max-w-lg bg-slate-900 border border-slate-700 rounded-t-3xl sm:rounded-2xl p-5 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between">
+          <h3 class="text-base font-bold text-white">Log Food</h3>
+          <button onclick="closeFoodModal()" class="w-9 h-9 rounded-xl bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center">✕</button>
+        </div>
+
+        <!-- Meal Selector -->
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">Meal Slot</label>
+          <select id="foodModalMealSlot" class="w-full h-11 px-3 rounded-xl bg-slate-800 border border-slate-700 text-sm font-semibold text-white focus:outline-none focus:border-emerald-500">
+            <option value="Breakfast">Breakfast</option>
+            <option value="Lunch">Lunch</option>
+            <option value="Dinner">Dinner</option>
+            <option value="Snacks">Snacks</option>
+          </select>
+        </div>
+
+        <!-- Quick Pick from Saved Favorites -->
+        <div>
+          <div class="text-xs font-semibold text-emerald-400 mb-2">Quick-Pick From Saved Favorites</div>
+          <div id="modalFavoritesQuickList" class="max-h-44 overflow-y-auto space-y-1.5 pr-1">
+            <!-- Populated by JS -->
+          </div>
+        </div>
+
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-slate-800"></div>
+          <span class="flex-shrink mx-3 text-[11px] uppercase tracking-wider text-slate-500">Or Custom Entry</span>
+          <div class="flex-grow border-t border-slate-800"></div>
+        </div>
+
+        <!-- Custom Food Form -->
+        <form onsubmit="saveCustomFoodEntry(event)" class="space-y-3">
+          <div class="grid grid-cols-3 gap-2">
+            <div class="col-span-2">
+              <label class="block text-xs text-slate-400 mb-1">Food / Meal Name</label>
+              <input type="text" id="customFoodName" required placeholder="e.g., Ribeye Steak 8oz" class="w-full h-11 px-3 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-xs text-slate-400 mb-1">Servings</label>
+              <input type="number" id="customFoodServings" value="1" min="0.25" max="20" step="0.25" required class="w-full h-11 px-3 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-4 gap-2">
+            <div>
+              <label class="block text-[10px] text-slate-400 mb-1">Calories</label>
+              <input type="number" id="customFoodCals" required min="0" placeholder="450" class="w-full h-11 px-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-[10px] text-emerald-400 mb-1">Protein (g)</label>
+              <input type="number" id="customFoodP" required min="0" step="0.5" placeholder="46" class="w-full h-11 px-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-[10px] text-sky-400 mb-1">Carbs (g)</label>
+              <input type="number" id="customFoodC" required min="0" step="0.5" placeholder="0" class="w-full h-11 px-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+            <div>
+              <label class="block text-[10px] text-amber-400 mb-1">Fat (g)</label>
+              <input type="number" id="customFoodF" required min="0" step="0.5" placeholder="28" class="w-full h-11 px-2.5 rounded-xl bg-slate-800 border border-slate-700 text-sm text-white focus:outline-none focus:border-emerald-500" />
+            </div>
+          </div>
+
+          <label class="flex items-center gap-2 text-xs text-slate-300 cursor-pointer pt-1">
+            <input type="checkbox" id="alsoSaveToLibraryCheck" class="w-4 h-4 rounded bg-slate-800 border-slate-600 text-emerald-500 focus:ring-0" />
+            <span>Also save to my Favorites Library for 1-tap reuse</span>
+          </label>
+
+          <button type="submit" class="w-full h-11 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-sm transition">
+            Add to Meal Log
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ==================== CUSTOM CONFIRMATION DIALOG ==================== -->
+    <div id="confirmModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="w-full max-w-sm bg-slate-900 border border-slate-700 rounded-2xl p-5 shadow-2xl space-y-4">
+        <h3 id="confirmModalTitle" class="text-base font-bold text-white">Confirm Action</h3>
+        <p id="confirmModalMessage" class="text-sm text-slate-300"></p>
+        <div class="flex gap-2.5">
+          <button onclick="closeConfirmModal()" class="flex-1 h-11 rounded-xl bg-slate-800 text-slate-300 font-semibold text-sm">Cancel</button>
+          <button id="confirmModalOkBtn" class="flex-1 h-11 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-bold text-sm">Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Notification Banner -->
+    <div id="toastBanner" class="fixed bottom-20 left-1/2 -translate-x-1/2 z-50 pointer-events-none opacity-0 transition-all duration-300 transform translate-y-2">
+      <div id="toastText" class="px-4 py-2.5 rounded-full bg-slate-800 border border-emerald-500/40 text-xs font-semibold text-white shadow-xl whitespace-nowrap">
+        Saved
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // =========================================================================
+    // STATE MANAGEMENT & DEFAULT SEED DATA
+    // =========================================================================
+    const STORAGE_KEY = 'dailyfit_log_v1';
+    const MEAL_SLOTS = ['Breakfast', 'Lunch', 'Dinner', 'Snacks'];
+
+    function getLocalDateKey(dateObj = new Date()) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    const DEFAULT_FAVORITE_FOODS = [
+      { id: 'f1', name: 'Crustless Cottage Cheese Quiche', serving: '1 slice', calories: 290, protein: 26, carbs: 6, fat: 18 },
+      { id: 'f2', name: '3 Eggs & 2 Strips Bacon', serving: '1 plate', calories: 340, protein: 24, carbs: 2, fat: 26 },
+      { id: 'f3', name: 'Grilled Chicken Breast', serving: '6 oz', calories: 280, protein: 52, carbs: 0, fat: 6 },
+      { id: 'f4', name: 'Skillet Ground Beef & Peppers', serving: '1 bowl', calories: 460, protein: 38, carbs: 9, fat: 30 },
+      { id: 'f5', name: 'Whey Isolate Protein Shake', serving: '1 scoop + water', calories: 130, protein: 26, carbs: 2, fat: 1.5 },
+      { id: 'f6', name: 'Greek Yogurt (Plain Full-Fat) & Berries', serving: '3/4 cup', calories: 190, protein: 16, carbs: 11, fat: 9 },
+      { id: 'f7', name: 'Black Coffee / Americano', serving: '12 oz', calories: 5, protein: 0, carbs: 1, fat: 0 },
+    ];
+
+    const DEFAULT_ROUTINES = [
+      {
+        id: 'r1',
+        name: 'Upper Body Strength',
+        exercises: [
+          { name: 'Incline Dumbbell Press', category: 'Strength', details: '3 sets × 10 reps', calories: 110 },
+          { name: 'Single-Arm Dumbbell Row', category: 'Strength', details: '3 sets × 12 reps / arm', calories: 100 },
+          { name: 'Overhead Shoulder Press', category: 'Strength', details: '3 sets × 10 reps', calories: 90 },
+          { name: 'Face Pulls / Band Pull-Aparts', category: 'Mobility', details: '3 sets × 15 reps', calories: 45 }
+        ]
+      },
+      {
+        id: 'r2',
+        name: 'Zone 2 Cardio (45m)',
+        exercises: [
+          { name: 'Brisk Walk / Ruck or Cycling (HR 120-135)', category: 'Cardio', details: '45 mins steady pace', calories: 320 },
+          { name: 'Hip Flexor & Calf Stretch', category: 'Mobility', details: '5 mins cooldown', calories: 20 }
+        ]
+      },
+      {
+        id: 'r3',
+        name: 'Lower Body & Core',
+        exercises: [
+          { name: 'Goblet Squats', category: 'Strength', details: '4 sets × 10 reps', calories: 130 },
+          { name: 'Romanian Deadlifts', category: 'Strength', details: '3 sets × 10 reps', calories: 120 },
+          { name: 'Plank & Dead Bugs', category: 'Mobility', details: '3 rounds × 45 sec', calories: 55 }
+        ]
+      }
+    ];
+
+    let appState = {
+      goals: {
+        calories: 2200,
+        protein: 170,
+        carbs: 100,
+        fat: 85,
+        includeExerciseCalories: true
+      },
+      favoriteFoods: [...DEFAULT_FAVORITE_FOODS],
+      routines: [...DEFAULT_ROUTINES],
+      days: {},
+      lastSync: null
+    };
+
+    let currentDateKey = getLocalDateKey();
+    let activeTab = 'today';
+
+    // Load saved state from localStorage
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          appState = {
+            ...appState,
+            ...parsed,
+            goals: { ...appState.goals, ...(parsed.goals || {}) },
+            favoriteFoods: parsed.favoriteFoods || [...DEFAULT_FAVORITE_FOODS],
+            routines: parsed.routines || [...DEFAULT_ROUTINES],
+            days: parsed.days || {}
+          };
+        } else {
+          // Seed today with a realistic starter plan on first visit
+          seedStarterDay(currentDateKey);
+          saveState();
+        }
+      } catch (err) {
+        console.error('Error loading state:', err);
+      }
+    }
+
+    function saveState() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
+      } catch (err) {
+        showToast('Storage warning: could not save locally');
+      }
+    }
+
+    function ensureDayRecord(dateKey) {
+      if (!appState.days[dateKey]) {
+        appState.days[dateKey] = {
+          updatedAt: new Date().toISOString(),
+          workouts: [],
+          meals: {
+            Breakfast: [],
+            Lunch: [],
+            Dinner: [],
+            Snacks: []
+          },
+          notes: ''
+        };
+      }
+      return appState.days[dateKey];
+    }
+
+    function touchDay(dateKey) {
+      const day = ensureDayRecord(dateKey);
+      day.updatedAt = new Date().toISOString();
+    }
+
+    function seedStarterDay(dateKey) {
+      const day = ensureDayRecord(dateKey);
+      day.workouts = [
+        { id: 'w_init_1', name: 'Zone 2 Morning Walk (HR ~125)', category: 'Cardio', details: '35 mins outdoor', calories: 240, completed: true },
+        { id: 'w_init_2', name: 'Dumbbell Press & Rows Superset', category: 'Strength', details: '3 sets × 10 reps', calories: 160, completed: false }
+      ];
+      day.meals.Breakfast = [
+        { id: 'm_init_1', name: 'Crustless Cottage Cheese Quiche', servings: 1, calories: 290, protein: 26, carbs: 6, fat: 18 },
+        { id: 'm_init_2', name: 'Black Coffee / Americano', servings: 1, calories: 5, protein: 0, carbs: 1, fat: 0 }
+      ];
+      day.meals.Lunch = [
+        { id: 'm_init_3', name: 'Grilled Chicken Breast (6 oz)', servings: 1, calories: 280, protein: 52, carbs: 0, fat: 6 }
+      ];
+    }
+
+    // =========================================================================
+    // DATE NAVIGATION
+    // =========================================================================
+    function formatFriendlyDate(dateKey) {
+      const todayKey = getLocalDateKey(new Date());
+      const yest = new Date();
+      yest.setDate(yest.getDate() - 1);
+      const tom = new Date();
+      tom.setDate(tom.getDate() + 1);
+
+      const [y, m, d] = dateKey.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      const shortStr = dt.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+
+      if (dateKey === todayKey) return `Today • ${shortStr}`;
+      if (dateKey === getLocalDateKey(yest)) return `Yesterday • ${shortStr}`;
+      if (dateKey === getLocalDateKey(tom)) return `Tomorrow • ${shortStr}`;
+      return shortStr;
+    }
+
+    function changeDate(offsetDays) {
+      const [y, m, d] = currentDateKey.split('-').map(Number);
+      const dt = new Date(y, m - 1, d);
+      dt.setDate(dt.getDate() + offsetDays);
+      currentDateKey = getLocalDateKey(dt);
+      renderAll();
+    }
+
+    function goToToday() {
+      currentDateKey = getLocalDateKey(new Date());
+      renderAll();
+    }
+
+    function setSpecificDate(val) {
+      if (!val) return;
+      currentDateKey = val;
+      renderAll();
+    }
+
+    // =========================================================================
+    // TAB SWITCHING
+    // =========================================================================
+    function switchTab(tabName) {
+      activeTab = tabName;
+      ['today', 'library', 'sync'].forEach(t => {
+        const section = document.getElementById(`tab-${t}`);
+        const btn = document.getElementById(`nav-${t}`);
+        if (t === tabName) {
+          section.classList.remove('hidden');
+          btn.classList.add('text-emerald-400', 'bg-emerald-500/10', 'font-semibold');
+          btn.classList.remove('text-slate-400', 'font-medium');
+        } else {
+          section.classList.add('hidden');
+          btn.classList.remove('text-emerald-400', 'bg-emerald-500/10', 'font-semibold');
+          btn.classList.add('text-slate-400', 'font-medium');
+        }
+      });
+      renderAll();
+    }
+
+    // =========================================================================
+    // RENDERING: SCOREBOARD, WORKOUTS, MEALS, LIBRARY, SETTINGS
+    // =========================================================================
+    function renderAll() {
+      document.getElementById('dateDisplayBtn').textContent = formatFriendlyDate(currentDateKey);
+      document.getElementById('datePickerInput').value = currentDateKey;
+
+      renderScoreboard();
+      renderWorkouts();
+      renderMeals();
+      renderLibrary();
+      renderSettings();
+    }
+
+    function renderScoreboard() {
+      const day = ensureDayRecord(currentDateKey);
+      let foodCals = 0, protein = 0, carbs = 0, fat = 0;
+
+      MEAL_SLOTS.forEach(slot => {
+        (day.meals[slot] || []).forEach(item => {
+          foodCals += Number(item.calories) || 0;
+          protein += Number(item.protein) || 0;
+          carbs += Number(item.carbs) || 0;
+          fat += Number(item.fat) || 0;
+        });
+      });
+
+      // Count burned calories from completed workouts (or all planned if none completed? Count completed workouts!)
+      let burnedCals = 0;
+      (day.workouts || []).forEach(w => {
+        if (w.completed) burnedCals += Number(w.calories) || 0;
+      });
+
+      const target = Number(appState.goals.calories) || 2200;
+      const includeEx = Boolean(appState.goals.includeExerciseCalories);
+      const remaining = target - Math.round(foodCals) + (includeEx ? Math.round(burnedCals) : 0);
+
+      document.getElementById('includeExerciseToggle').checked = includeEx;
+      document.getElementById('statTarget').textContent = target.toLocaleString();
+      document.getElementById('statFood').textContent = Math.round(foodCals).toLocaleString();
+      document.getElementById('statBurned').textContent = Math.round(burnedCals).toLocaleString();
+
+      const remEl = document.getElementById('statRemaining');
+      remEl.textContent = remaining.toLocaleString();
+      remEl.className = `text-base sm:text-lg font-extrabold ${remaining < 0 ? 'text-rose-400' : 'text-emerald-400'}`;
+
+      // Macros
+      const pGoal = Number(appState.goals.protein) || 170;
+      const cGoal = Number(appState.goals.carbs) || 100;
+      const fGoal = Number(appState.goals.fat) || 85;
+
+      document.getElementById('macroProteinText').textContent = `${Math.round(protein)} / ${pGoal}g`;
+      document.getElementById('macroProteinBar').style.width = `${Math.min(100, (protein / pGoal) * 100)}%`;
+
+      document.getElementById('macroCarbsText').textContent = `${Math.round(carbs)} / ${cGoal}g`;
+      document.getElementById('macroCarbsBar').style.width = `${Math.min(100, (carbs / cGoal) * 100)}%`;
+
+      document.getElementById('macroFatText').textContent = `${Math.round(fat)} / ${fGoal}g`;
+      document.getElementById('macroFatBar').style.width = `${Math.min(100, (fat / fGoal) * 100)}%`;
+
+      document.getElementById('dailyNotesInput').value = day.notes || '';
+    }
+
+    function renderWorkouts() {
+      const day = ensureDayRecord(currentDateKey);
+      const list = day.workouts || [];
+      const container = document.getElementById('workoutListContainer');
+
+      // Populate routine selector dropdown
+      const routineSelect = document.getElementById('quickRoutineSelect');
+      routineSelect.innerHTML = `<option value="">+ Load Routine...</option>` +
+        appState.routines.map(r => `<option value="${r.id}">${escapeHtml(r.name)}</option>`).join('');
+
+      const completedCount = list.filter(w => w.completed).length;
+      document.getElementById('workoutProgressBadge').textContent = `${completedCount}/${list.length}`;
+
+      if (list.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-6 px-3 rounded-xl bg-slate-900/60 border border-dashed border-slate-700/80">
+            <p class="text-xs text-slate-400">No workouts planned for this day yet.</p>
+            <p class="text-[11px] text-slate-500 mt-1">Tap "+ Exercise" or pick a saved routine above.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = list.map(w => {
+        const badgeColor = w.category === 'Cardio'
+          ? 'bg-sky-500/15 text-sky-300 border-sky-500/30'
+          : w.category === 'Mobility'
+            ? 'bg-purple-500/15 text-purple-300 border-purple-500/30'
+            : 'bg-amber-500/15 text-amber-300 border-amber-500/30';
+
+        return `
+          <div class="flex items-center gap-3 p-3 rounded-xl border transition ${w.completed ? 'bg-slate-900/50 border-emerald-500/30' : 'bg-slate-900/90 border-slate-700/70'}">
+            <button onclick="toggleWorkoutComplete('${w.id}')" aria-label="Toggle workout completed" class="w-8 h-8 rounded-xl border-2 flex items-center justify-center shrink-0 transition ${w.completed ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'border-slate-600 hover:border-emerald-400 text-transparent'}">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
+
+            <div class="flex-1 min-w-0" onclick="openWorkoutModal('${w.id}')">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-sm font-semibold truncate ${w.completed ? 'line-through text-slate-400' : 'text-white'}">${escapeHtml(w.name)}</span>
+                <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded border ${badgeColor}">${escapeHtml(w.category)}</span>
+              </div>
+              <div class="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+                <span>${escapeHtml(w.details || 'Planned session')}</span>
+                <span>•</span>
+                <span class="text-sky-400 font-medium">${w.calories || 0} kcal</span>
+              </div>
+            </div>
+
+            <button onclick="deleteWorkout('${w.id}')" aria-label="Delete exercise" class="w-9 h-9 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-800 flex items-center justify-center shrink-0 transition">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderMeals() {
+      const day = ensureDayRecord(currentDateKey);
+      const container = document.getElementById('mealsContainer');
+
+      container.innerHTML = MEAL_SLOTS.map(slot => {
+        const items = day.meals[slot] || [];
+        const slotCals = items.reduce((sum, i) => sum + (Number(i.calories) || 0), 0);
+        const slotProtein = items.reduce((sum, i) => sum + (Number(i.protein) || 0), 0);
+
+        return `
+          <div class="bg-slate-800/75 border border-slate-700/70 rounded-2xl p-3.5 shadow-sm">
+            <div class="flex items-center justify-between mb-2">
+              <div>
+                <h3 class="text-sm font-bold text-white">${slot}</h3>
+                <p class="text-[11px] text-slate-400">${Math.round(slotCals)} kcal • <span class="text-emerald-400 font-medium">${Math.round(slotProtein)}g protein</span></p>
+              </div>
+              <button onclick="openFoodModal('${slot}')" class="h-9 px-3 rounded-xl bg-slate-900 hover:bg-slate-700 border border-slate-700 text-xs font-semibold text-emerald-400 transition">
+                + Add
+              </button>
+            </div>
+
+            ${items.length === 0 ? `
+              <div class="text-[11px] text-slate-500 py-1.5">Nothing logged yet</div>
+            ` : `
+              <div class="divide-y divide-slate-800/90 mt-1">
+                ${items.map(item => `
+                  <div class="py-2 flex items-center justify-between gap-2">
+                    <div class="min-w-0 flex-1">
+                      <div class="text-xs sm:text-sm font-medium text-slate-100 truncate">
+                        ${escapeHtml(item.name)}
+                        ${item.servings && item.servings !== 1 ? `<span class="text-slate-400 text-xs">(${item.servings}×)</span>` : ''}
+                      </div>
+                      <div class="text-[11px] text-slate-400">
+                        ${Math.round(item.calories)} kcal • <span class="text-emerald-400">${Math.round(item.protein)}g P</span> • ${Math.round(item.carbs)}g C • ${Math.round(item.fat)}g F
+                      </div>
+                    </div>
+                    <button onclick="deleteFoodEntry('${slot}', '${item.id}')" aria-label="Remove food item" class="w-8 h-8 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-slate-900 flex items-center justify-center shrink-0">
+                      ✕
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderLibrary() {
+      const foodListEl = document.getElementById('libraryFoodsList');
+      foodListEl.innerHTML = appState.favoriteFoods.map(f => `
+        <div class="flex items-center justify-between gap-2 p-3 rounded-xl bg-slate-900/90 border border-slate-700/70">
+          <div class="min-w-0 flex-1">
+            <div class="text-sm font-semibold text-white truncate">${escapeHtml(f.name)}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">
+              ${escapeHtml(f.serving)} • <span class="text-slate-200 font-medium">${f.calories} kcal</span> • <span class="text-emerald-400">${f.protein}g P</span> / ${f.carbs}g C / ${f.fat}g F
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 shrink-0">
+            <button onclick="quickLogLibraryFood('${f.id}')" class="h-10 px-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 font-bold text-xs transition">
+              + Log
+            </button>
+            <button onclick="deleteLibraryFood('${f.id}')" aria-label="Delete saved food" class="w-9 h-10 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-slate-800 flex items-center justify-center">
+              ✕
+            </button>
+          </div>
+        </div>
+      `).join('');
+
+      const routinesListEl = document.getElementById('libraryRoutinesList');
+      routinesListEl.innerHTML = appState.routines.map(r => {
+        const totalCals = r.exercises.reduce((s, e) => s + (Number(e.calories) || 0), 0);
+        return `
+          <div class="p-3.5 rounded-xl bg-slate-900/90 border border-slate-700/70 space-y-2">
+            <div class="flex items-center justify-between gap-2">
+              <div>
+                <div class="text-sm font-bold text-white">${escapeHtml(r.name)}</div>
+                <div class="text-[11px] text-slate-400">${r.exercises.length} exercises • ~${totalCals} kcal</div>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button onclick="loadRoutineIntoDay('${r.id}'); switchTab('today');" class="h-10 px-3 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs transition">
+                  Add to Day
+                </button>
+                <button onclick="deleteRoutine('${r.id}')" aria-label="Delete routine" class="w-9 h-10 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-slate-800 flex items-center justify-center">
+                  ✕
+                </button>
+              </div>
+            </div>
+            <ul class="text-xs text-slate-400 space-y-1 pl-2 border-l-2 border-slate-700">
+              ${r.exercises.map(ex => `<li>• ${escapeHtml(ex.name)} <span class="text-slate-500">(${escapeHtml(ex.details)})</span></li>`).join('')}
+            </ul>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function renderSettings() {
+      document.getElementById('goalCaloriesInput').value = appState.goals.calories;
+      document.getElementById('goalProteinInput').value = appState.goals.protein;
+      document.getElementById('goalCarbsInput').value = appState.goals.carbs;
+      document.getElementById('goalFatInput').value = appState.goals.fat;
+
+      const syncLabel = appState.lastSync
+        ? new Date(appState.lastSync).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : 'Not synced yet';
+      document.getElementById('lastSyncTimestamp').textContent = syncLabel;
+      document.getElementById('headerSyncBadge').textContent = appState.lastSync ? 'Synced' : 'Drive Sync';
+    }
+
+    // =========================================================================
+    // WORKOUT ACTIONS
+    // =========================================================================
+    function openWorkoutModal(workoutId = null) {
+      const modal = document.getElementById('workoutModal');
+      if (workoutId) {
+        const day = ensureDayRecord(currentDateKey);
+        const w = day.workouts.find(item => item.id === workoutId);
+        if (!w) return;
+        document.getElementById('workoutModalTitle').textContent = 'Edit Exercise';
+        document.getElementById('editWorkoutId').value = w.id;
+        document.getElementById('woName').value = w.name;
+        document.getElementById('woCategory').value = w.category;
+        document.getElementById('woDetails').value = w.details;
+        document.getElementById('woCalories').value = w.calories;
+      } else {
+        document.getElementById('workoutModalTitle').textContent = 'Plan Exercise';
+        document.getElementById('editWorkoutId').value = '';
+        document.getElementById('woName').value = '';
+        document.getElementById('woCategory').value = 'Strength';
+        document.getElementById('woDetails').value = '';
+        document.getElementById('woCalories').value = '120';
+      }
+      modal.classList.remove('hidden');
+    }
+
+    function closeWorkoutModal() {
+      document.getElementById('workoutModal').classList.add('hidden');
+    }
+
+    function saveWorkoutEntry(e) {
+      e.preventDefault();
+      const day = ensureDayRecord(currentDateKey);
+      const editId = document.getElementById('editWorkoutId').value;
+      const name = document.getElementById('woName').value.trim();
+      const category = document.getElementById('woCategory').value;
+      const details = document.getElementById('woDetails').value.trim();
+      const calories = Number(document.getElementById('woCalories').value) || 0;
+
+      if (editId) {
+        const idx = day.workouts.findIndex(w => w.id === editId);
+        if (idx !== -1) {
+          day.workouts[idx] = { ...day.workouts[idx], name, category, details, calories };
+        }
+        showToast('Exercise updated');
+      } else {
+        day.workouts.push({
+          id: 'w_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+          name,
+          category,
+          details,
+          calories,
+          completed: false
+        });
+        showToast('Added to workout plan');
+      }
+
+      touchDay(currentDateKey);
+      saveState();
+      closeWorkoutModal();
+      renderAll();
+    }
+
+    function toggleWorkoutComplete(id) {
+      const day = ensureDayRecord(currentDateKey);
+      const w = day.workouts.find(item => item.id === id);
+      if (w) {
+        w.completed = !w.completed;
+        touchDay(currentDateKey);
+        saveState();
+        renderAll();
+        if (w.completed) showToast(`Completed: ${w.name}`);
+      }
+    }
+
+    function deleteWorkout(id) {
+      const day = ensureDayRecord(currentDateKey);
+      day.workouts = day.workouts.filter(w => w.id !== id);
+      touchDay(currentDateKey);
+      saveState();
+      renderAll();
+      showToast('Exercise removed');
+    }
+
+    function loadRoutineIntoDay(routineId) {
+      if (!routineId) return;
+      const routine = appState.routines.find(r => r.id === routineId);
+      if (!routine) return;
+
+      const day = ensureDayRecord(currentDateKey);
+      routine.exercises.forEach((ex, i) => {
+        day.workouts.push({
+          id: 'w_' + Date.now() + '_' + i + '_' + Math.random().toString(36).slice(2, 5),
+          name: ex.name,
+          category: ex.category,
+          details: ex.details,
+          calories: ex.calories,
+          completed: false
+        });
+      });
+
+      touchDay(currentDateKey);
+      saveState();
+      renderAll();
+      showToast(`Loaded "${routine.name}"`);
+    }
+
+    function saveCurrentDayAsRoutine() {
+      const day = ensureDayRecord(currentDateKey);
+      if (!day.workouts || day.workouts.length === 0) {
+        showToast('Plan at least 1 exercise on Today first');
+        return;
+      }
+      const routineName = `Custom Routine (${formatFriendlyDate(currentDateKey).split('•')[0].trim()})`;
+      appState.routines.unshift({
+        id: 'r_' + Date.now(),
+        name: routineName,
+        exercises: day.workouts.map(w => ({
+          name: w.name,
+          category: w.category,
+          details: w.details,
+          calories: w.calories
+        }))
+      });
+      saveState();
+      renderAll();
+      showToast('Saved Today’s workouts as a routine');
+    }
+
+    function deleteRoutine(id) {
+      appState.routines = appState.routines.filter(r => r.id !== id);
+      saveState();
+      renderAll();
+      showToast('Routine removed');
+    }
+
+    // =========================================================================
+    // FOOD & NUTRITION ACTIONS
+    // =========================================================================
+    function openFoodModal(mealSlot = 'Breakfast') {
+      document.getElementById('foodModalMealSlot').value = mealSlot;
+      document.getElementById('customFoodName').value = '';
+      document.getElementById('customFoodServings').value = '1';
+      document.getElementById('customFoodCals').value = '';
+      document.getElementById('customFoodP').value = '';
+      document.getElementById('customFoodC').value = '';
+      document.getElementById('customFoodF').value = '';
+      document.getElementById('alsoSaveToLibraryCheck').checked = false;
+
+      // Render quick-pick favorites inside modal
+      const quickList = document.getElementById('modalFavoritesQuickList');
+      quickList.innerHTML = appState.favoriteFoods.map(f => `
+        <button type="button" onclick="logFavoriteFromModal('${f.id}')" class="w-full text-left p-2.5 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700/80 flex items-center justify-between gap-2 transition">
+          <div class="min-w-0">
+            <div class="text-xs font-semibold text-white truncate">${escapeHtml(f.name)}</div>
+            <div class="text-[10px] text-slate-400">${f.calories} kcal • ${f.protein}g P • ${f.carbs}g C • ${f.fat}g F</div>
+          </div>
+          <span class="text-xs font-bold text-emerald-400 shrink-0">+ Add</span>
+        </button>
+      `).join('');
+
+      document.getElementById('foodModal').classList.remove('hidden');
+    }
+
+    function closeFoodModal() {
+      document.getElementById('foodModal').classList.add('hidden');
+    }
+
+    function logFavoriteFromModal(foodId) {
+      const slot = document.getElementById('foodModalMealSlot').value;
+      const food = appState.favoriteFoods.find(f => f.id === foodId);
+      if (!food) return;
+
+      addFoodToDay(slot, {
+        name: food.name,
+        servings: 1,
+        calories: food.calories,
+        protein: food.protein,
+        carbs: food.carbs,
+        fat: food.fat
+      });
+      closeFoodModal();
+      showToast(`Logged to ${slot}`);
+    }
+
+    function quickLogLibraryFood(foodId) {
+      const slot = document.getElementById('libraryTargetMeal').value;
+      const food = appState.favoriteFoods.find(f => f.id === foodId);
+      if (!food) return;
+
+      addFoodToDay(slot, {
+        name: food.name,
+        servings: 1,
+        calories: food.calories,
+        protein: food.protein,
+        carbs: food.carbs,
+        fat: food.fat
+      });
+      showToast(`Logged "${food.name}" to ${slot}`);
+    }
+
+    function saveCustomFoodEntry(e) {
+      e.preventDefault();
+      const slot = document.getElementById('foodModalMealSlot').value;
+      const name = document.getElementById('customFoodName').value.trim();
+      const servings = Number(document.getElementById('customFoodServings').value) || 1;
+      const baseCals = Number(document.getElementById('customFoodCals').value) || 0;
+      const baseP = Number(document.getElementById('customFoodP').value) || 0;
+      const baseC = Number(document.getElementById('customFoodC').value) || 0;
+      const baseF = Number(document.getElementById('customFoodF').value) || 0;
+
+      addFoodToDay(slot, {
+        name,
+        servings,
+        calories: Math.round(baseCals * servings),
+        protein: +(baseP * servings).toFixed(1),
+        carbs: +(baseC * servings).toFixed(1),
+        fat: +(baseF * servings).toFixed(1)
+      });
+
+      if (document.getElementById('alsoSaveToLibraryCheck').checked) {
+        appState.favoriteFoods.unshift({
+          id: 'f_' + Date.now(),
+          name,
+          serving: '1 serving',
+          calories: baseCals,
+          protein: baseP,
+          carbs: baseC,
+          fat: baseF
+        });
+        saveState();
+      }
+
+      closeFoodModal();
+      showToast(`Logged to ${slot}`);
+    }
+
+    function addFoodToDay(slot, entry) {
+      const day = ensureDayRecord(currentDateKey);
+      if (!day.meals[slot]) day.meals[slot] = [];
+      day.meals[slot].push({
+        id: 'm_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6),
+        ...entry
+      });
+      touchDay(currentDateKey);
+      saveState();
+      renderAll();
+    }
+
+    function deleteFoodEntry(slot, entryId) {
+      const day = ensureDayRecord(currentDateKey);
+      day.meals[slot] = (day.meals[slot] || []).filter(item => item.id !== entryId);
+      touchDay(currentDateKey);
+      saveState();
+      renderAll();
+      showToast('Food entry removed');
+    }
+
+    function toggleNewFoodLibraryForm() {
+      document.getElementById('newLibraryFoodForm').classList.toggle('hidden');
+    }
+
+    function addLibraryFood(e) {
+      e.preventDefault();
+      appState.favoriteFoods.unshift({
+        id: 'f_' + Date.now(),
+        name: document.getElementById('libFoodName').value.trim(),
+        serving: document.getElementById('libFoodServing').value.trim(),
+        calories: Number(document.getElementById('libFoodCals').value) || 0,
+        protein: Number(document.getElementById('libFoodP').value) || 0,
+        carbs: Number(document.getElementById('libFoodC').value) || 0,
+        fat: Number(document.getElementById('libFoodF').value) || 0
+      });
+      saveState();
+      e.target.reset();
+      toggleNewFoodLibraryForm();
+      renderAll();
+      showToast('Saved to Favorites Library');
+    }
+
+    function deleteLibraryFood(id) {
+      appState.favoriteFoods = appState.favoriteFoods.filter(f => f.id !== id);
+      saveState();
+      renderAll();
+      showToast('Removed from library');
+    }
+
+    function saveDailyNotes(val) {
+      const day = ensureDayRecord(currentDateKey);
+      day.notes = val;
+      touchDay(currentDateKey);
+      saveState();
+    }
+
+    // =========================================================================
+    // SETTINGS & GOOGLE DRIVE JSON EXPORT / IMPORT SYNC
+    // =========================================================================
+    function toggleIncludeExercise() {
+      appState.goals.includeExerciseCalories = document.getElementById('includeExerciseToggle').checked;
+      saveState();
+      renderScoreboard();
+    }
+
+    function saveGoals() {
+      appState.goals.calories = Number(document.getElementById('goalCaloriesInput').value) || 2200;
+      appState.goals.protein = Number(document.getElementById('goalProteinInput').value) || 170;
+      appState.goals.carbs = Number(document.getElementById('goalCarbsInput').value) || 100;
+      appState.goals.fat = Number(document.getElementById('goalFatInput').value) || 85;
+      saveState();
+      renderAll();
+      showToast('Daily targets saved');
+    }
+
+    async function exportBackupToDrive(preferNativeShare = true) {
+      const nowIso = new Date().toISOString();
+      appState.lastSync = nowIso;
+      saveState();
+      renderSettings();
+
+      const payload = {
+        app: 'DailyFit Log',
+        version: 1,
+        exportedAt: nowIso,
+        data: appState
+      };
+
+      const jsonStr = JSON.stringify(payload, null, 2);
+      const filename = `dailyfit-backup-${getLocalDateKey()}.json`;
+      const blob = new Blob([jsonStr], { type: 'application/json' });
+      const file = new File([blob], filename, { type: 'application/json' });
+
+      // On Android / mobile browsers supporting Web Share with files, open Share Sheet (Google Drive appears directly)
+      if (preferNativeShare && navigator.canShare && navigator.canShare({ files: [file] })) {
+        try {
+          await navigator.share({
+            title: 'DailyFit Log Backup',
+            text: `DailyFit Log backup (${getLocalDateKey()})`,
+            files: [file]
+          });
+          showToast('Shared backup to Drive');
+          return;
+        } catch (err) {
+          if (err.name === 'AbortError') return;
+          // Fall back to standard download if share fails
+        }
+      }
+
+      // Standard download (ideal on PC where Google Drive for Desktop syncs Downloads or Drive folder)
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast(`Downloaded ${filename}`);
+    }
+
+    function handleImportFile(event) {
+      const file = event.target.files && event.target.files[0];
+      if (!file) return;
+
+      const mode = document.getElementById('importModeSelect').value;
+      const reader = new FileReader();
+
+      reader.onload = function (e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          const incoming = parsed.data ? parsed.data : parsed;
+
+          if (!incoming || typeof incoming !== 'object' || !incoming.days) {
+            showToast('Invalid DailyFit backup file');
+            return;
+          }
+
+          if (mode === 'replace') {
+            appState = {
+              ...appState,
+              ...incoming,
+              lastSync: new Date().toISOString()
+            };
+          } else {
+            // Merge strategy: combine favorite foods, routines, and take newest version of each day
+            const mergedDays = { ...appState.days };
+            Object.keys(incoming.days || {}).forEach(dKey => {
+              const localDay = mergedDays[dKey];
+              const remoteDay = incoming.days[dKey];
+              if (!localDay) {
+                mergedDays[dKey] = remoteDay;
+              } else {
+                const localTime = new Date(localDay.updatedAt || 0).getTime();
+                const remoteTime = new Date(remoteDay.updatedAt || 0).getTime();
+                if (remoteTime >= localTime) {
+                  mergedDays[dKey] = remoteDay;
+                }
+              }
+            });
+
+            // Merge unique favorite foods by name
+            const existingFoodNames = new Set(appState.favoriteFoods.map(f => f.name.toLowerCase()));
+            const newFoods = (incoming.favoriteFoods || []).filter(f => !existingFoodNames.has(f.name.toLowerCase()));
+
+            // Merge unique routines by name
+            const existingRoutineNames = new Set(appState.routines.map(r => r.name.toLowerCase()));
+            const newRoutines = (incoming.routines || []).filter(r => !existingRoutineNames.has(r.name.toLowerCase()));
+
+            appState = {
+              ...appState,
+              goals: incoming.goals || appState.goals,
+              favoriteFoods: [...appState.favoriteFoods, ...newFoods],
+              routines: [...appState.routines, ...newRoutines],
+              days: mergedDays,
+              lastSync: new Date().toISOString()
+            };
+          }
+
+          saveState();
+          renderAll();
+          showToast(`Synced from ${file.name}`);
+        } catch (err) {
+          console.error(err);
+          showToast('Could not read JSON backup file');
+        } finally {
+          event.target.value = '';
+        }
+      };
+
+      reader.readAsText(file);
+    }
+
+    function loadDemoDay() {
+      seedStarterDay(currentDateKey);
+      saveState();
+      renderAll();
+      switchTab('today');
+      showToast('Loaded sample plan & meals');
+    }
+
+    function confirmClearAllData() {
+      const modal = document.getElementById('confirmModal');
+      document.getElementById('confirmModalTitle').textContent = 'Reset All Data?';
+      document.getElementById('confirmModalMessage').textContent = 'This will erase all logged days, workouts, and custom foods on this device. Export a Google Drive backup first if you want to keep your history.';
+      document.getElementById('confirmModalOkBtn').onclick = function () {
+        localStorage.removeItem(STORAGE_KEY);
+        appState.days = {};
+        appState.favoriteFoods = [...DEFAULT_FAVORITE_FOODS];
+        appState.routines = [...DEFAULT_ROUTINES];
+        appState.lastSync = null;
+        saveState();
+        closeConfirmModal();
+        renderAll();
+        showToast('All local data cleared');
+      };
+      modal.classList.remove('hidden');
+    }
+
+    function closeConfirmModal() {
+      document.getElementById('confirmModal').classList.add('hidden');
+    }
+
+    // =========================================================================
+    // UTILITIES
+    // =========================================================================
+    let toastTimer = null;
+    function showToast(msg) {
+      const banner = document.getElementById('toastBanner');
+      const text = document.getElementById('toastText');
+      text.textContent = msg;
+      banner.classList.remove('opacity-0', 'translate-y-2');
+      banner.classList.add('opacity-100', 'translate-y-0');
+
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        banner.classList.add('opacity-0', 'translate-y-2');
+        banner.classList.remove('opacity-100', 'translate-y-0');
+      }, 2400);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // Initialize app on load
+    window.addEventListener('DOMContentLoaded', () => {
+      loadState();
+      renderAll();
+    });
+  </script>
+</body>
+</html>
